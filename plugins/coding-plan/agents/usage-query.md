@@ -50,6 +50,8 @@ You are responsible for querying the user's current Coding Plan usage informatio
 ## Time Range Support
 
 For ZHIPU platforms, you can specify a time range using these formats:
+
+- `<number>` - Last N days (default, e.g., `7` = last 7 days)
 - `<number>m` - Last N minutes (e.g., `30m` = last 30 minutes)
 - `<number>h` - Last N hours (e.g., `6h` = last 6 hours)
 - `<number>d` - Last N days (e.g., `7d` = last 7 days)
@@ -58,7 +60,8 @@ For ZHIPU platforms, you can specify a time range using these formats:
 - `<number>y` - Last N years (e.g., `1y` = last 1 year)
 
 Parse the user's natural language request and convert to the appropriate format:
-- "last 7 days" / "past week" → `7d`
+
+- "last 7 days" / "past week" → `7`
 - "recent 6 hours" → `6h`
 - "last 30 minutes" → `30m`
 - "past month" → `1M`
@@ -73,9 +76,22 @@ Note: MiniMax platforms do not support custom time ranges and use API-provided t
 ## Execution Process
 
 1. Parse any time range from the user's request
-2. Invoke the skill: Call `@coding-plan:query-executor` with the time range argument (if specified)
+2. Invoke the skill: Call `@coding-plan:query-executor` and pass time range as argument
 3. The skill will execute `query.mjs` and return the result
 4. Report the outcome to the user
+
+### Time Range Argument Passing
+
+When calling the skill, pass the time range as a direct argument (no brackets, no quotes):
+
+| User Request        | Skill Argument  |
+| ------------------- | --------------- |
+| "last 7 days"       | `7`             |
+| "recent 6 hours"    | `6h`            |
+| "last 30 minutes"   | `30m`           |
+| "past 2 weeks"      | `2w`            |
+| "last month"        | `1M`            |
+| (no time specified) | (omit argument) |
 
 ## Output Language
 

@@ -9,6 +9,7 @@
  *
  * Time Range Options:
  *   - No argument: Default 24-hour window (yesterday same hour to now)
+ *   - <number>: Last N days (e.g., 7 = last 7 days, default unit is days)
  *   - <number>m: Last N minutes (e.g., 30m = last 30 minutes)
  *   - <number>h: Last N hours (e.g., 6h = last 6 hours)
  *   - <number>d: Last N days (e.g., 7d = last 7 days)
@@ -96,15 +97,22 @@ function formatDateTimeUTC(date) {
 /**
  * Parse time range argument
  * Supported formats: 30m, 6h, 7d, 2w, 3M, 1y
+ * Default unit: days (e.g., "7" means "7d")
  */
 function parseTimeRange(arg) {
   if (!arg) return null;
+
+  // If just a number, default to days
+  if (/^\d+$/.test(arg)) {
+    return { value: parseInt(arg, 10), unit: 'd' };
+  }
 
   const match = arg.match(/^(\d+)([mhdwMy])$/);
   if (!match) {
     console.error(`Invalid time range format: ${arg}`);
     console.error('Supported formats: <number>m (minutes), <number>h (hours), <number>d (days)');
     console.error('                   <number>w (weeks), <number>M (months), <number>y (years)');
+    console.error('                   <number> (defaults to days, e.g., 7 = 7d)');
     process.exit(1);
   }
 

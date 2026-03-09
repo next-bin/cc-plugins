@@ -1,5 +1,6 @@
 ---
-description: Query Coding Plan usage statistics and quota for your account. Supports time range for ZHIPU platforms (e.g., /usage-query 7d for last 7 days)
+description: Query Coding Plan usage statistics and quota for your account. Supports time range for ZHIPU platforms (e.g., /usage-query 7 for last 7 days)
+argument-hint: "[timeRange]"
 allowed-tools: ["Bash", "Read", "Skill"]
 ---
 
@@ -17,6 +18,7 @@ Invoke the `@coding-plan:usage-query` agent to retrieve usage information for th
 
 | Format | Description | Example |
 | ------ | ----------- | ------- |
+| `<number>` | Last N days (default) | `7` = last 7 days |
 | `<number>m` | Last N minutes | `30m` = last 30 minutes |
 | `<number>h` | Last N hours | `6h` = last 6 hours |
 | `<number>d` | Last N days | `7d` = last 7 days |

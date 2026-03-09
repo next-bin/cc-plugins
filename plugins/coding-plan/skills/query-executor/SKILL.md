@@ -1,6 +1,7 @@
 ---
 name: query-executor
-description: This skill should be used when the usage-query agent needs to run the actual usage query. Execute the query script to retrieve account information for ZHIPU_EN_ZAI, ZHIPU_CN, MINIMAX_CN, MINIMAX_EN platforms. Supports optional time range parameter for ZHIPU platforms.
+description: Execute the query script to retrieve Coding Plan usage for ZHIPU_EN_ZAI, ZHIPU_CN, MINIMAX_CN, MINIMAX_EN platforms. The timeRange argument is optional - if provided, use one of these EXACT formats: "7" (7 days), "30m" (30 minutes), "6h" (6 hours), "7d" (7 days), "2w" (2 weeks), "3M" (3 months), "1y" (1 year). Do NOT include brackets or quotes - just pass the raw value like: 7, 30m, 6h, 7d, 2w, 3M, 1y. If no time range needed, omit the argument entirely.
+argument-hint: "[timeRange]"
 ---
 
 # Query Executor Skill
@@ -13,36 +14,46 @@ Execute the query script and return the result.
 
 ## Execution
 
-### Run the query
+### How to Pass Time Range Argument
 
-Use Node.js to execute the script from the plugin root:
+**IMPORTANT**: The timeRange is passed as a command-line argument WITHOUT brackets or quotes.
 
-```bash
-node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs [timeRange]
-```
-
-Or if working directory is already the skill folder:
+**Correct examples:**
 
 ```bash
-node scripts/query.mjs [timeRange]
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs 7
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs 30m
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs 6h
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs 2w
 ```
 
-### Time Range Parameter (ZHIPU platforms only)
+**Incorrect (DO NOT do this):**
 
-Optional time range argument for querying specific time periods:
+```bash
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs [timeRange]  # WRONG
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs "7"          # WRONG
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs [7]          # WRONG
+```
 
-| Format | Description | Example |
-| ------ | ----------- | ------- |
-| `<number>m` | Last N minutes | `30m` = last 30 minutes |
-| `<number>h` | Last N hours | `6h` = last 6 hours |
-| `<number>d` | Last N days | `7d` = last 7 days |
-| `<number>w` | Last N weeks | `2w` = last 2 weeks |
-| `<number>M` | Last N months | `3M` = last 3 months |
-| `<number>y` | Last N years | `1y` = last 1 year |
+### No Time Range (Default 24-hour window)
 
-If no time range is specified, the default is a 24-hour window (yesterday same hour to now).
+```bash
+node ${CLAUDE_PLUGIN_ROOT}/skills/query-executor/scripts/query.mjs
+```
 
-**Note**: MiniMax platforms do not support custom time ranges and will ignore this parameter.
+### Time Range Formats (ZHIPU platforms only)
+
+| Argument | Meaning         | Example Usage       |
+| -------- | --------------- | ------------------- |
+| `7`      | Last 7 days     | `.../query.mjs 7`   |
+| `30m`    | Last 30 minutes | `.../query.mjs 30m` |
+| `6h`     | Last 6 hours    | `.../query.mjs 6h`  |
+| `7d`     | Last 7 days     | `.../query.mjs 7d`  |
+| `2w`     | Last 2 weeks    | `.../query.mjs 2w`  |
+| `3M`     | Last 3 months   | `.../query.mjs 3M`  |
+| `1y`     | Last 1 year     | `.../query.mjs 1y`  |
+
+**Note**: MiniMax platforms do not support custom time ranges - omit the argument for MiniMax.
 
 ### Return the result
 

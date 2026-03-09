@@ -33,6 +33,7 @@ Retrieve the usage information for the current account.
 
 | Format | Description | Example |
 | ------ | ----------- | ------- |
+| `<number>` | Last N days (default) | `7` = last 7 days |
 | `<number>m` | Last N minutes | `30m` = last 30 minutes |
 | `<number>h` | Last N hours | `6h` = last 6 hours |
 | `<number>d` | Last N days | `7d` = last 7 days |
@@ -44,7 +45,7 @@ Retrieve the usage information for the current account.
 
 ```
 /coding-plan:usage-query          # Default 24-hour window
-/coding-plan:usage-query 7d       # Last 7 days
+/coding-plan:usage-query 7        # Last 7 days
 /coding-plan:usage-query 6h       # Last 6 hours
 /coding-plan:usage-query 1M       # Last month
 ```
