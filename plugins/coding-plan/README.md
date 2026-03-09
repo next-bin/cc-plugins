@@ -20,7 +20,7 @@ claude plugin install coding-plan@cc-plugins
 In Claude Code, run:
 
 ```
-/coding-plan:usage-query
+/coding-plan:usage-query [timeRange]
 ```
 
 ## Command Overview
@@ -28,6 +28,26 @@ In Claude Code, run:
 ### /usage-query
 
 Retrieve the usage information for the current account.
+
+**Time Range Parameter (ZHIPU platforms only):**
+
+| Format | Description | Example |
+| ------ | ----------- | ------- |
+| `<number>m` | Last N minutes | `30m` = last 30 minutes |
+| `<number>h` | Last N hours | `6h` = last 6 hours |
+| `<number>d` | Last N days | `7d` = last 7 days |
+| `<number>w` | Last N weeks | `2w` = last 2 weeks |
+| `<number>M` | Last N months | `3M` = last 3 months |
+| `<number>y` | Last N years | `1y` = last 1 year |
+
+**Examples:**
+
+```
+/coding-plan:usage-query          # Default 24-hour window
+/coding-plan:usage-query 7d       # Last 7 days
+/coding-plan:usage-query 6h       # Last 6 hours
+/coding-plan:usage-query 1M       # Last month
+```
 
 **Execution flow:**
 
@@ -47,12 +67,12 @@ Retrieve the usage information for the current account.
 
 ## Supported Platforms
 
-| Platform     | Base URL Pattern                         |
-| ------------ | ---------------------------------------- |
-| ZHIPU_EN_ZAI | `https://api.z.ai/api/anthropic`         |
-| ZHIPU_CN     | `https://open.bigmodel.cn/api/anthropic` |
-| MINIMAX_CN   | `https://api.minimax.chat/api/anthropic` |
-| MINIMAX_EN   | `https://api.minimax.io/anthropic`       |
+| Platform     | Base URL Pattern                         | Time Range Support |
+| ------------ | ---------------------------------------- | ------------------ |
+| ZHIPU_EN_ZAI | `https://api.z.ai/api/anthropic`         | ✅ Yes             |
+| ZHIPU_CN     | `https://open.bigmodel.cn/api/anthropic` | ✅ Yes             |
+| MINIMAX_CN   | `https://api.minimax.chat/api/anthropic` | ❌ No (uses API window) |
+| MINIMAX_EN   | `https://api.minimax.io/anthropic`       | ❌ No (uses API window) |
 
 ## Extending the Plugin
 

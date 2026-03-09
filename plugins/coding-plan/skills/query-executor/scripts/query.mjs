@@ -5,7 +5,16 @@
  * Supports multiple platforms: ZHIPU_EN_ZAI, ZHIPU_CN, MINIMAX_CN, MINIMAX_EN
  *
  * Usage:
- *   node query.mjs
+ *   node query.mjs [timeRange]
+ *
+ * Time Range Options:
+ *   - No argument: Default 24-hour window (yesterday same hour to now)
+ *   - <number>m: Last N minutes (e.g., 30m = last 30 minutes)
+ *   - <number>h: Last N hours (e.g., 6h = last 6 hours)
+ *   - <number>d: Last N days (e.g., 7d = last 7 days)
+ *   - <number>w: Last N weeks (e.g., 2w = last 2 weeks)
+ *   - <number>M: Last N months (e.g., 3M = last 3 months)
+ *   - <number>y: Last N years (e.g., 1y = last 1 year)
  */
 
 import https from 'https';
@@ -84,10 +93,66 @@ function formatDateTimeUTC(date) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function getTimeWindow() {
+/**
+ * Parse time range argument
+ * Supported formats: 30m, 6h, 7d, 2w, 3M, 1y
+ */
+function parseTimeRange(arg) {
+  if (!arg) return null;
+
+  const match = arg.match(/^(\d+)([mhdwMy])$/);
+  if (!match) {
+    console.error(`Invalid time range format: ${arg}`);
+    console.error('Supported formats: <number>m (minutes), <number>h (hours), <number>d (days)');
+    console.error('                   <number>w (weeks), <number>M (months), <number>y (years)');
+    process.exit(1);
+  }
+
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+
+  return { value, unit };
+}
+
+/**
+ * Calculate time window based on time range
+ * @param {object|null} timeRange - Parsed time range {value, unit} or null for default
+ */
+function getTimeWindow(timeRange) {
   const now = new Date();
-  const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, now.getHours(), 0, 0, 0);
-  const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), 59, 59, 999);
+  let startDate;
+
+  if (!timeRange) {
+    // Default: 24-hour window (yesterday same hour to now)
+    startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, now.getHours(), 0, 0, 0);
+  } else {
+    const { value, unit } = timeRange;
+    startDate = new Date(now);
+
+    switch (unit) {
+      case 'm': // minutes
+        startDate = new Date(now.getTime() - value * 60 * 1000);
+        break;
+      case 'h': // hours
+        startDate = new Date(now.getTime() - value * 60 * 60 * 1000);
+        break;
+      case 'd': // days
+        startDate = new Date(now.getTime() - value * 24 * 60 * 60 * 1000);
+        break;
+      case 'w': // weeks
+        startDate = new Date(now.getTime() - value * 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'M': // months
+        startDate = new Date(now.getFullYear(), now.getMonth() - value, now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+        break;
+      case 'y': // years
+        startDate = new Date(now.getFullYear() - value, now.getMonth(), now.getDate(), now.getHours(), now.getMinutes(), now.getSeconds());
+        break;
+    }
+  }
+
+  const endDate = now;
+
   return {
     startTime: formatDateTime(startDate),
     endTime: formatDateTime(endDate)
@@ -132,10 +197,14 @@ function httpRequest(apiUrl, options = {}) {
 
 // ==================== Query Handlers ====================
 
-async function queryUsage(config) {
+async function queryUsage(config, timeRange) {
   const { baseDomain } = config;
-  const { startTime, endTime } = getTimeWindow();
+  const { startTime, endTime } = getTimeWindow(timeRange);
   const queryParams = `?startTime=${encodeURIComponent(startTime)}&endTime=${encodeURIComponent(endTime)}`;
+
+  // Display time range info
+  console.log(`Time Range: ${startTime} ~ ${endTime}`);
+  console.log('');
 
   const endpoints = [
     { url: `${baseDomain}/api/monitor/usage/model-usage`, label: 'Model usage', useParams: true },
@@ -248,13 +317,22 @@ async function main() {
   validateEnv();
   const config = getPlatformConfig();
 
+  // Parse command line argument for time range
+  const timeRangeArg = process.argv[2];
+  const timeRange = parseTimeRange(timeRangeArg);
+
   console.log(`Platform: ${config.platform}`);
-  console.log('');
 
   if (config.platform === 'MINIMAX_CN' || config.platform === 'MINIMAX_EN') {
+    // MiniMax API doesn't support custom time range, uses API-provided window
+    if (timeRange) {
+      console.log('Note: MiniMax platform uses API-provided time window, time range argument is ignored.');
+      console.log('');
+    }
     await queryMiniMax(config);
   } else {
-    await queryUsage(config);
+    // ZHIPU platforms support custom time range
+    await queryUsage(config, timeRange);
   }
 }
 
