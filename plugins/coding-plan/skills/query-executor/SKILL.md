@@ -1,6 +1,6 @@
 ---
 name: query-executor
-description: Execute usage query scripts to retrieve account information. Supports multiple query types (usage, history). Only use when invoked by usage-query agent.
+description: Execute usage query scripts to retrieve account information. Supports ZHIPU_EN_ZAI, ZHIPU_CN, MINIMAX_CN, MINIMAX_EN platforms. Only use when invoked by usage-query agent.
 allowed-tools: Bash, Read
 ---
 
@@ -16,19 +16,14 @@ Execute the query script and return the result.
 
 ### Run the query
 
-Use Node.js to execute the script with optional `--type` parameter:
+Use Node.js to execute the script:
 
 ```bash
-node scripts/query.mjs --type=usage
+node scripts/query.mjs
 ```
 
-Supported query types:
-
-- `usage` (default) - Query usage statistics (model usage, tool usage, quota limit)
-- `history` - Query history (placeholder for future)
-
 > If your working directory is elsewhere, `cd` into the plugin root first or use an absolute path:
-> `node /absolute/path/to/coding-plan/skills/query-executor/scripts/query.mjs --type=usage`
+> `node /absolute/path/to/coding-plan/skills/query-executor/scripts/query.mjs`
 
 ### Return the result
 

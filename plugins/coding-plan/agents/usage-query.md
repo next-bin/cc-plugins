@@ -24,7 +24,7 @@ The skill will run query.mjs automatically, then return the result.
 
 Based on the skill output, respond to the user:
 
-Attention: If the Platform in the skill output is ZHIPU, then output Chinese 中文. If it is ZAI, then output English.
+Attention: If the Platform in the skill output is ZHIPU_CN or MINIMAX_CN, then output Chinese 中文. Otherwise output English.
 
 ## Prohibited actions
 

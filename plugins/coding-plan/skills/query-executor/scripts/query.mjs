@@ -2,19 +2,13 @@
 
 /**
  * Coding Plan Query Script
- * Supports multiple query types via --type parameter
+ * Supports multiple platforms: ZHIPU_EN_ZAI, ZHIPU_CN, MINIMAX_CN, MINIMAX_EN
  *
  * Usage:
- *   node query.mjs --type=usage     # Query usage statistics (default)
- *   node query.mjs --type=history   # Query history (placeholder for future)
+ *   node query.mjs
  */
 
 import https from 'https';
-
-// Parse command line arguments
-const args = process.argv.slice(2);
-const typeArg = args.find(arg => arg.startsWith('--type='));
-const queryType = typeArg ? typeArg.split('=')[1] : 'usage';
 
 // Read environment variables
 const baseUrl = process.env.ANTHROPIC_BASE_URL || '';
@@ -38,6 +32,10 @@ function validateEnv() {
     console.error('  export ANTHROPIC_BASE_URL="https://api.z.ai/api/anthropic"');
     console.error('  or');
     console.error('  export ANTHROPIC_BASE_URL="https://open.bigmodel.cn/api/anthropic"');
+    console.error('  or');
+    console.error('  export ANTHROPIC_BASE_URL="https://api.minimax.chat/api/anthropic"');
+    console.error('  or');
+    console.error('  export ANTHROPIC_BASE_URL="https://api.minimax.io/anthropic"');
     process.exit(1);
   }
 }
@@ -47,9 +45,13 @@ function getPlatformConfig() {
   const baseDomain = `${parsedBaseUrl.protocol}//${parsedBaseUrl.host}`;
 
   if (baseUrl.includes('api.z.ai')) {
-    return { platform: 'ZAI', baseDomain };
+    return { platform: 'ZHIPU_EN_ZAI', baseDomain };
   } else if (baseUrl.includes('open.bigmodel.cn') || baseUrl.includes('dev.bigmodel.cn')) {
-    return { platform: 'ZHIPU', baseDomain };
+    return { platform: 'ZHIPU_CN', baseDomain };
+  } else if (baseUrl.includes('minimaxi.com') || baseUrl.includes('api.minimax.chat')) {
+    return { platform: 'MINIMAX_CN', apiDomain: 'https://www.minimaxi.com' };
+  } else if (baseUrl.includes('api.minimax.io')) {
+    return { platform: 'MINIMAX_EN', apiDomain: 'https://api.minimax.io' };
   }
 
   console.error('Error: Unrecognized ANTHROPIC_BASE_URL:', baseUrl);
@@ -57,6 +59,8 @@ function getPlatformConfig() {
   console.error('Supported values:');
   console.error('  - https://api.z.ai/api/anthropic');
   console.error('  - https://open.bigmodel.cn/api/anthropic');
+  console.error('  - https://api.minimax.chat/api/anthropic (MiniMax CN)');
+  console.error('  - https://api.minimax.io/anthropic (MiniMax EN)');
   process.exit(1);
 }
 
@@ -83,13 +87,14 @@ function getTimeWindow() {
 function httpRequest(apiUrl, options = {}) {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(apiUrl);
+    const authorization = options.useBearerToken ? `Bearer ${authToken}` : authToken;
     const reqOptions = {
       hostname: parsedUrl.hostname,
       port: 443,
       path: parsedUrl.pathname + (options.queryParams || ''),
       method: 'GET',
       headers: {
-        'Authorization': authToken,
+        'Authorization': authorization,
         'Accept-Language': 'en-US,en',
         'Content-Type': 'application/json'
       }
@@ -173,35 +178,58 @@ function processQuotaLimit(data) {
   return data;
 }
 
-// Placeholder for future query types
-async function queryHistory(config) {
-  console.log('History query not implemented yet.');
-  console.log('This is a placeholder for future functionality.');
+// ==================== MiniMax Query Handler ====================
+
+async function queryMiniMax(config) {
+  const apiUrl = `${config.apiDomain}/v1/api/openplatform/coding_plan/remains`;
+
+  try {
+    const result = await httpRequest(apiUrl, { useBearerToken: true });
+
+    if (result.base_resp && result.base_resp.status_code !== 0) {
+      console.error(`Error: ${result.base_resp.status_msg}`);
+      return;
+    }
+
+    if (!result.model_remains || result.model_remains.length === 0) {
+      console.log('No model usage data available.');
+      return;
+    }
+
+    console.log('Model usage data:');
+    console.log('');
+
+    for (const model of result.model_remains) {
+      const startTime = formatDateTime(new Date(model.start_time));
+      const endTime = formatDateTime(new Date(model.end_time));
+      const remainsMinutes = Math.floor(model.remains_time / 60);
+      const remainsSeconds = model.remains_time % 60;
+
+      console.log(`Model: ${model.model_name}`);
+      console.log(`  Time Window: ${startTime} ~ ${endTime}`);
+      console.log(`  Quota: ${model.current_interval_usage_count}/${model.current_interval_total_count}`);
+      console.log(`  Remaining Time: ${remainsMinutes}m ${remainsSeconds}s`);
+      console.log('');
+    }
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+  }
 }
 
 // ==================== Main ====================
-
-const queryHandlers = {
-  usage: queryUsage,
-  history: queryHistory
-};
 
 async function main() {
   validateEnv();
   const config = getPlatformConfig();
 
   console.log(`Platform: ${config.platform}`);
-  console.log(`Query Type: ${queryType}`);
   console.log('');
 
-  const handler = queryHandlers[queryType];
-  if (!handler) {
-    console.error(`Error: Unknown query type "${queryType}"`);
-    console.error('Supported types:', Object.keys(queryHandlers).join(', '));
-    process.exit(1);
+  if (config.platform === 'MINIMAX_CN' || config.platform === 'MINIMAX_EN') {
+    await queryMiniMax(config);
+  } else {
+    await queryUsage(config);
   }
-
-  await handler(config);
 }
 
 main().catch((error) => {
