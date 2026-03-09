@@ -1,0 +1,23 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "cc-plugins",
+  "version": "1.0.0",
+  "description": "A collection of plugins developed by next-bin to enhance coding productivity and workflows.",
+  "owner": {
+    "name": "next-bin",
+    "email": "unitsvc@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/next-bin/cc-plugins.git"
+  },
+  "license": "AGPL-3.0",
+  "plugins": [
+    {
+      "name": "coding-plan",
+      "source": "./plugins/coding-plan",
+      "category": "development",
+      "description": "Query quota and usage statistics for Coding Plan service."
+    }
+  ]
+}
