@@ -1,8 +1,7 @@
 {
-  "$schema": "https://anthropic.com/claude-code/plugin.schema.json",
   "name": "coding-plan",
   "description": "Query quota and usage statistics for Coding Plan service",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": {
     "name": "next-bin",
     "email": "unitsvc@gmail.com"
@@ -14,18 +13,10 @@
   },
   "license": "AGPL-3.0",
   "keywords": [
-    "coding",
-    "plan",
+    "coding plan",
     "usage",
     "quota",
     "statistics",
     "monitoring"
-  ],
-  "categories": [
-    "development",
-    "productivity"
-  ],
-  "engines": {
-    "claude-code": ">=2.1.71"
-  }
+  ]
 }
