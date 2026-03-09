@@ -200,14 +200,19 @@ async function queryMiniMax(config) {
     console.log('');
 
     for (const model of result.model_remains) {
+      // Convert UTC to local time (API returns UTC timestamps in milliseconds)
       const startTime = formatDateTime(new Date(model.start_time));
       const endTime = formatDateTime(new Date(model.end_time));
-      const remainsMinutes = Math.floor(model.remains_time / 60);
-      const remainsSeconds = model.remains_time % 60;
+      // remains_time is in milliseconds
+      const remainsMs = model.remains_time;
+      const remainsMinutes = Math.floor(remainsMs / 60000);
+      const remainsSeconds = Math.floor((remainsMs % 60000) / 1000);
+      // current_interval_usage_count is remaining quota, not used
+      const usedCount = model.current_interval_total_count - model.current_interval_usage_count;
 
       console.log(`Model: ${model.model_name}`);
       console.log(`  Time Window: ${startTime} ~ ${endTime}`);
-      console.log(`  Quota: ${model.current_interval_usage_count}/${model.current_interval_total_count}`);
+      console.log(`  Quota: ${usedCount}/${model.current_interval_total_count} (remaining: ${model.current_interval_usage_count})`);
       console.log(`  Remaining Time: ${remainsMinutes}m ${remainsSeconds}s`);
       console.log('');
     }
