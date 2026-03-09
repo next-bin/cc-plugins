@@ -6,11 +6,8 @@
     "name": "next-bin",
     "email": "unitsvc@gmail.com"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/next-bin/cc-plugins.git",
-    "directory": "plugins/coding-plan"
-  },
+  "homepage": "https://github.com/next-bin/cc-plugins",
+  "repository": "https://github.com/next-bin/cc-plugins",
   "license": "AGPL-3.0",
   "keywords": [
     "coding plan",
