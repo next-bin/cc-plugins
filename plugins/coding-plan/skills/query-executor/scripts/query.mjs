@@ -222,19 +222,21 @@ async function queryMiniMax(config) {
       const minutes = Math.floor((remainsMs % 3600000) / 60000);
       const seconds = Math.floor((remainsMs % 60000) / 1000);
       const remainsStr = hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
-      // Quota info
-      const usedCount = model.current_interval_usage_count;
+      // Quota info (current_interval_usage_count is remaining, not used)
+      const remainingCount = model.current_interval_usage_count;
       const totalCount = model.current_interval_total_count;
-      const remainingCount = totalCount - usedCount;
-      const percentage = ((remainingCount / totalCount) * 100).toFixed(1);
+      const usedCount = totalCount - remainingCount;
+      const usagePercentage = ((usedCount / totalCount) * 100).toFixed(1);
 
       console.log(`Model: ${model.model_name}`);
       console.log(`  Time Window: ${startTimeLocal} ~ ${endTimeLocal} (Local)`);
-      console.log(`  Quota: ${usedCount}/${totalCount} used (remaining: ${remainingCount}, ${percentage}%)`);
+      console.log(`  Quota: ${usedCount}/${totalCount} used (${usagePercentage}%), remaining: ${remainingCount}`);
       console.log(`  Reset at: ${endTimeLocal} (Local) / ${endTimeUTC} (UTC)`);
-      console.log(`  Time until reset: ${remainsStr}`);
+      console.log(`  Time until reset: ${remainsStr} (${remainsMs} ms)`);
       console.log('');
     }
+
+    console.log('Note: All models share the same quota. remains_time is in milliseconds.');
   } catch (error) {
     console.error(`Error: ${error.message}`);
   }
