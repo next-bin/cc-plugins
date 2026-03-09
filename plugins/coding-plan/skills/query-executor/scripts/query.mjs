@@ -74,6 +74,16 @@ function formatDateTime(date) {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
+function formatDateTimeUTC(date) {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  const hours = String(date.getUTCHours()).padStart(2, '0');
+  const minutes = String(date.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(date.getUTCSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 function getTimeWindow() {
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, now.getHours(), 0, 0, 0);
@@ -200,20 +210,29 @@ async function queryMiniMax(config) {
     console.log('');
 
     for (const model of result.model_remains) {
-      // Convert UTC to local time (API returns UTC timestamps in milliseconds)
-      const startTime = formatDateTime(new Date(model.start_time));
-      const endTime = formatDateTime(new Date(model.end_time));
-      // remains_time is in milliseconds
+      // Window time (start_time and end_time are UTC timestamps in milliseconds)
+      const startDate = new Date(model.start_time);
+      const endDate = new Date(model.end_time);
+      const startTimeLocal = formatDateTime(startDate);
+      const endTimeLocal = formatDateTime(endDate);
+      const endTimeUTC = formatDateTimeUTC(endDate);
+      // Remaining time until reset (remains_time is in milliseconds)
       const remainsMs = model.remains_time;
-      const remainsMinutes = Math.floor(remainsMs / 60000);
-      const remainsSeconds = Math.floor((remainsMs % 60000) / 1000);
-      // current_interval_usage_count is remaining quota, not used
-      const usedCount = model.current_interval_total_count - model.current_interval_usage_count;
+      const hours = Math.floor(remainsMs / 3600000);
+      const minutes = Math.floor((remainsMs % 3600000) / 60000);
+      const seconds = Math.floor((remainsMs % 60000) / 1000);
+      const remainsStr = hours > 0 ? `${hours}h ${minutes}m ${seconds}s` : `${minutes}m ${seconds}s`;
+      // Quota info
+      const usedCount = model.current_interval_usage_count;
+      const totalCount = model.current_interval_total_count;
+      const remainingCount = totalCount - usedCount;
+      const percentage = ((remainingCount / totalCount) * 100).toFixed(1);
 
       console.log(`Model: ${model.model_name}`);
-      console.log(`  Time Window: ${startTime} ~ ${endTime}`);
-      console.log(`  Quota: ${usedCount}/${model.current_interval_total_count} (remaining: ${model.current_interval_usage_count})`);
-      console.log(`  Remaining Time: ${remainsMinutes}m ${remainsSeconds}s`);
+      console.log(`  Time Window: ${startTimeLocal} ~ ${endTimeLocal} (Local)`);
+      console.log(`  Quota: ${usedCount}/${totalCount} used (remaining: ${remainingCount}, ${percentage}%)`);
+      console.log(`  Reset at: ${endTimeLocal} (Local) / ${endTimeUTC} (UTC)`);
+      console.log(`  Time until reset: ${remainsStr}`);
       console.log('');
     }
   } catch (error) {
